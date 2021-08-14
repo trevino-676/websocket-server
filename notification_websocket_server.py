@@ -32,9 +32,17 @@ def get_notifications():
     return list(notifications)
 
 
+def set_inactive_notification(notification: dict):
+    filters = {"_id": notification["_id"]}
+    notification["is_active"] = False
+    db.notifications.replace_one(filters, notification)
+    logging.info(f"Se cambio el active a false _id:{notification['_id']}")
+
+
 def send_notifications_event():
     notifications = get_notifications()
     for notification in notifications:
+        set_inactive_notification(notification)
         notification["_id"] = str(notification["_id"])
 
     return json.dumps({"type": "notification", "data": notifications})
