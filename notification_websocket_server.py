@@ -17,7 +17,7 @@ USERS = set()
 # SetUp the database for mongo
 client = pymongo.MongoClient(environ.get("MONGO_URL"))
 db = client.robin_hood
-logging.info("Database conection successfully")
+logging.info("Database conection successfully's")
 
 
 def get_notifications():
