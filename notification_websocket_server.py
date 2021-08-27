@@ -6,6 +6,7 @@ from os import environ
 import websockets
 import pymongo
 import dotenv
+from bson import ObjectId
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(message)s", datefmt="%d-%b-%y %H:%M:%S"
@@ -32,17 +33,17 @@ def get_notifications():
     return list(notifications)
 
 
-def set_inactive_notification(notification: dict):
-    filters = {"_id": notification["_id"]}
+async def set_inactive_notification(notification: dict):
+    filters = {"_id": ObjectId(notification["_id"])}
+    notification["_id"] = ObjectId(notification["_id"])
     notification["is_active"] = False
     db.notifications.replace_one(filters, notification)
-    logging.info(f"Se cambio el active a false _id:{notification['_id']}")
+    logging.info(f"Se cambio el active a false _id:{str(notification['_id'])}")
 
 
 def send_notifications_event():
     notifications = get_notifications()
     for notification in notifications:
-        set_inactive_notification(notification)
         notification["_id"] = str(notification["_id"])
 
     return json.dumps({"type": "notification", "data": notifications})
@@ -79,6 +80,8 @@ async def server(websocket, path):
             data = json.loads(message)
             if data["action"] == "notify":
                 await notify_event()
+            if data["action"] == "seen":
+                await set_inactive_notification(data["notification"])
             else:
                 logging.error(f"unsopported event: {data}")
     finally:
